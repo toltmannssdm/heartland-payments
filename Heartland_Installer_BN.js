@@ -10,7 +10,87 @@ define([
 
 	var connection_settings = {
         type: 'customrecord_heartl_settings',
-        fields: {
+        fields: getConnectionFieldsAndDefaults()
+    };
+
+	function checkPrerequisites() {
+		var requireFeatures = [
+			'ACCOUNTING',
+			'ACCOUNTINGPERIODS',
+			// 'ALTERNATIVEPAYMENTS',
+			'CRM',
+			'DOCUMENTS',
+			'SERVERSIDESCRIPTING'
+		];
+
+		requireFeatures.forEach(function(feature) {
+	        if (!runtime.isFeatureInEffect({
+                feature: feature
+            }))
+            throw 'The ' + feature + ' feature must be enabled. ' +
+                'Please enable the feature and try again.';
+
+		});
+    }
+
+	function getHeartlandPaymentMethod() {
+
+		var results = search.create({
+			type: search.Type.PAYMENT_METHOD,
+			columns: [],
+			filters: [
+				['name', search.Operator.IS, 'Heartland'],
+				'OR',
+				['name', search.Operator.IS, 'heartland'],
+				'OR',
+				['name', search.Operator.IS, 'HEARTLAND'],
+			]
+		}).run().getRange({start: 0, end: 1});
+
+		if (!results) {
+			return null;
+		}
+
+		return results[0].id;
+	}
+
+	function beforeInstall(context) {
+
+		checkPrerequisites();
+
+		var heartlandPaymentMethodExists = getHeartlandPaymentMethod;
+
+		if (!heartlandPaymentMethodExists) {
+			throw 'A payment method with the name "Heartland" must be created before install';
+		}
+
+	}
+
+	function afterInstall(context) {
+
+		var settingsExist = search.create({type: connection_settings.type}).run().getRange({start: 0, end: 1});
+
+		if (settingsExist) {
+			return;
+		}
+
+		var heartlandSettings = record.create({
+			type: connection_settings.type
+		});
+
+		for (var field in connection_settings.fields) {
+    		heartlandSettings.setValue({
+    			fieldId: field.fieldId, 
+    			value: field.defaultValue
+    		});
+        }
+
+		heartlandSettings.save();
+	}
+
+    function getConnectionFieldsAndDefaults() {
+        return {
+    
             publicKey: {
                 fieldId: 'custrecord_heartl_s_public_key',
                 defaultValue: 'pkapi_cert_XXXXXXXXXXXXXXXXXX'
@@ -148,82 +228,7 @@ define([
                 defaultValue: true
             }
         }
-    };
-
-	function checkPrerequisites() {
-		var requireFeatures = [
-			'ACCOUNTING',
-			'ACCOUNTINGPERIODS',
-			// 'ALTERNATIVEPAYMENTS',
-			'CRM',
-			'DOCUMENTS',
-			'SERVERSIDESCRIPTING'
-		];
-
-		requireFeatures.forEach(function(feature) {
-	        if (!runtime.isFeatureInEffect({
-                feature: feature
-            }))
-            throw 'The ' + feature + ' feature must be enabled. ' +
-                'Please enable the feature and try again.';
-
-		});
     }
-
-	function getHeartlandPaymentMethod() {
-
-		var results = search.create({
-			type: search.Type.PAYMENT_METHOD,
-			columns: [],
-			filters: [
-				['name', search.Operator.IS, 'Heartland'],
-				'OR',
-				['name', search.Operator.IS, 'heartland'],
-				'OR',
-				['name', search.Operator.IS, 'HEARTLAND'],
-			]
-		}).run().getRange({start: 0, end: 1});
-
-		if (!results) {
-			return null;
-		}
-
-		return results[0].id;
-	}
-
-	function beforeInstall(context) {
-
-		checkPrerequisites();
-
-		var heartlandPaymentMethodExists = getHeartlandPaymentMethod;
-
-		if (!heartlandPaymentMethodExists) {
-			throw 'A payment method with the name "Heartland" must be created before install';
-		}
-
-	}
-
-	function afterInstall(context) {
-
-		var settingsExist = search.create({type: connection_settings.type}).run().getRange({start: 0, end: 1});
-
-		if (settingsExist) {
-			return;
-		}
-
-		var heartlandSettings = record.create({
-			type: connection_settings.type
-		});
-
-		for (var field in connection_settings.fields) {
-    		heartlandSettings.setValue({
-    			fieldId: field.fieldId, 
-    			value: field.defaultValue
-    		});
-        }
-
-		heartlandSettings.save();
-	}
 
 	return {
 		beforeInstall: beforeInstall,

@@ -72,123 +72,24 @@ define([
 
 	establishHeartlandIframes = function establishHeartlandIframes() {
 
-	    // Create a new `HPS` object with the necessary configuration
-	    var hps = new Heartland.HPS({
-	      publicKey: settings.publicKey,
-	      type:      'iframe',
-	      // Configure the iframe fields to tell the library where
-	      // the iframe should be inserted into the DOM and some
-	      // basic options
-	      fields: {
-	        cardNumber: {
-	          target:      'iframesCardNumber',
-	          placeholder: '•••• •••• •••• ••••'
-	        },
-	        cardExpiration: {
-	          target:      'iframesCardExpiration',
-	          placeholder: 'MM / YYYY'
-	        },
-	        cardCvv: {
-	          target:      'iframesCardCvv',
-	          placeholder: 'CVV'
-	        }
-	      },
-	      // Collection of CSS to inject into the iframes.
-	      // These properties can match the site's styles
-	      // to create a seamless experience.
-	      style: {
-	      	'.text': {
-	      		'font-size': '9pt',
-			    'text-transform': 'uppercase',
-			    'color': '#666 !important',
-	      	},
-	        'input[type=text],input[type=tel]': {
-	        	'box-sizing':'border-box',
-	            'display': 'block',
-	            'width': '100%',
-	            'height': '34px',
-	            'padding': '6px 12px',
-	            'font-size': '14px',
-	            'line-height': '1.42857143',
-	            'color': '#555',
-	            'background-color': '#fff',
-	            'background-image': 'none',
-	            'border': '1px solid #ccc',
-	            'border-radius': '4px',
-	        },
-	        'input[type=text]:focus,input[type=tel]:focus': {
-	        	'border-color': '#66afe9',
-	          	'outline': '0',
-	        },
-	        'input[type=submit]': {
-        		'box-sizing':'border-box',
-        	    'display': 'inline-block',
-				'padding': '6px 12px',
-				'margin-bottom': '0',
-				'font-size': '14px',
-				'font-weight': '400',
-				'line-height': '1.42857143',
-				'text-align': 'center',
-				'white-space': 'nowrap',
-				'vertical-align': 'middle',
-				'-ms-touch-action': 'manipulation',
-				'touch-action': 'manipulation',
-				'cursor': 'pointer',
-				'-webkit-user-select': 'none',
-				'-moz-user-select': 'none',
-				'-ms-user-select': 'none',
-				'user-select': 'none',
-				'background-image': 'none',
-				'border': '1px solid transparent',
-				'border-radius': '4px',
-				'color': '#fff',
-				'background-color': '#337ab7',
-				'border-color': '#2e6da4'
-	        },
-	        'input[type=submit]:hover': {
-	        		'color': '#fff',
-	            'background-color': '#286090',
-	            'border-color': '#204d74'
-	        },
-	        'input[type=submit]:focus, input[type=submit].focus': {
-	            'color': '#fff',
-	            'background-color': '#286090',
-	            'border-color': '#122b40',
-	            'text-decoration': 'none',
-	        }
-	      },
-	      // Callback when a token is received from the service
-	      onTokenSuccess: function (resp) {
+		/* callbacks for the HPS connection */
+		function success(resp) {
 	        var currentRecordObject = currentRecord.get();
 	        currentRecordObject.setValue({fieldId: app.config.transaction.body.ccToken, value: resp.token_value});
 	        currentRecordObject.setValue({fieldId: app.config.transaction.body.cardType, value: resp.card_type});
 	        currentRecordObject.setValue({fieldId: app.config.transaction.body.creditCardNumber, value: resp.card.number});
 	        currentRecordObject.setValue({fieldId: 'custbody_heartl_iframe', value: ''});
-	      },
-	      // Callback when an error is received from the service
-	      onTokenError: function (resp) {
+	        iframeField = currentRecordObject.getField({fieldId: 'custbody_heartl_iframe'});
+	        console.log('should have cleared the iframe', iframeField, currentRecordObject);
+	    }
+	    function failure(resp) {
 	        alert('There was an error: ' + resp.error.message);
-	      }
-	    });
+	    }
 
-	    // Attach a handler to interrupt the form submission
-	    Heartland.Events.addHandler(document.getElementById('heartlandsubmit'), 'click', function (e) {
-	      
-			e.preventDefault();
+	    var hps = utils.createHeartlandHPSConnection(Heartland, success, failure, settings.publicKey);
 
-			// Tell the iframes to tokenize the data
-			hps.Messages.post(
-				{
-				  accumulateData: true,
-				  action: 'tokenize',
-				  message: settings.publicKey
-				},
-				'cardNumber'
-			);
+	    utils.addHPSSubmitHandler(Heartland, hps, settings.publicKey);
 
-			var currentRecordObject = currentRecord.get();
-			setHeartlandPaymentMethod(currentRecordObject);
-	    });
 	};
 
 	/* given a transaction record, set the default heartland payment Operation */
@@ -292,11 +193,6 @@ define([
 			/* mask the card number */
 			var maskedCardNumber = maskCardNumber(heartlandccData.number);
 
-			/* card was not tokenized */
-			if (!maskedCardNumber) {
-				return true;
-			}
-
 			/* confirm with the user that the card is about to be authorized for the given amount */
 			if (!confirm( "Process " + paymentOperationText + " on " + heartlandccData.cardHolderName + " " + cardType + " card " + heartlandccData.number + "?" )) {
 				return false;
@@ -314,10 +210,10 @@ define([
 
 				return true;
 			}
-			log.debug({title: 'heartlandccData.token.indexOf(/supt/)', details: heartlandccData.token.indexOf(/supt/)});
+			log.debug({title: 'heartlandccData.token.indexOf(/supt/)', details: [heartlandccData.token, heartlandccData.token.indexOf('supt')]});
 
 			/* if we already have a multiuse token, don't retokenize it */
-			if (heartlandccData.token && heartlandccData.token.indexOf(/supt/) == -1) {
+			if (heartlandccData.token && heartlandccData.token.indexOf('supt') == -1) {
 				return true;
 			}
 
@@ -387,20 +283,13 @@ define([
 			recordObject.setValue(options);
 		}
 
-		/* Due a UI issue, this field will not be set for a new CC, user event handles that 
-		 @note this also serves to force wipe the actual card data before submit via botched sourcing */
-		// options = {
-		// 	fieldId: app.config.transaction.body.creditCards,
-		// 	value: response.ccId
-		// };
-		// log.debug({title: 'options', details: options});
-		// recordObject.setValue(options);
     };
 
 	/* Make sure that the response was valid, and handle errors */
 	validateClientResponse = function validateClientResponse(response) {
 		var responseBody = response.body;
-log.debug({title: 'client response', details: response});
+		
+		log.debug({title: 'client response', details: response});
 		if (!responseBody) {
 			alert(app.config.language.noGatewayResponse);
 			return false;
@@ -601,18 +490,6 @@ log.debug({title: 'client response', details: response});
 				currentRecord.setValue(options);
 			}
 
-			/* Due a UI issue, this field will not be set for a new CC, user event handles that 
-			 @note this also serves to force wipe the actual card data before submit via botched sourcing */
-			// options = {
-			// 	fieldId: app.config.transaction.body.creditCards,
-			// 	value: response.ccId
-			// };
-			// log.debug({title: 'options', details: options});
-			// recordObject.setValue(options);
-
-
-
-
 		} catch(e) {
 			window.console && console.error(JSON.stringify(e), e);
 			throw app.handleError(e);
@@ -714,7 +591,7 @@ log.debug({title: 'client response', details: response});
 
 	return {
 		pageInit: pageInit,
-		// saveRecord: saveRecord,
+		saveRecord: saveRecord,
 		fieldChanged: fieldChanged
 	};
 });
