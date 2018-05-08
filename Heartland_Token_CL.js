@@ -114,9 +114,6 @@ define([
 		try {
 
 			var currentRecord = scriptContext.currentRecord;
-			console.log(app);
-			console.log(app.config);
-			console.log(app.config.record);
 
 			var onetimeuse = currentRecord.getValue({
 				fieldId: app.config.record.tokens.field.onetimeuse
@@ -130,15 +127,11 @@ define([
 
 			var heartlandccData = buildHeartlandTokenRequest(currentRecord);
 
-			console.log(heartlandccData);
-
 			/* Send a request to Heartland to tokenize the single use token, firing the callback on success */
 			return app.hlapi.routeMultiUseTokenRequest(heartlandccData, function callback(tokenResponse) {
 				
 				var response = validateClientResponse(tokenResponse);
 			
-				console.log(response);
-
 				if (!response) {
 					Promise.reject(response);
 					return false;

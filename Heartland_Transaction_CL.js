@@ -80,7 +80,6 @@ define([
 	        currentRecordObject.setValue({fieldId: app.config.transaction.body.creditCardNumber, value: resp.card.number});
 	        currentRecordObject.setValue({fieldId: 'custbody_heartl_iframe', value: ''});
 	        iframeField = currentRecordObject.getField({fieldId: 'custbody_heartl_iframe'});
-	        console.log('should have cleared the iframe', iframeField, currentRecordObject);
 	    }
 	    function failure(resp) {
 	        alert('There was an error: ' + resp.error.message);
@@ -152,7 +151,7 @@ define([
 			var processAvs = currentRecord.getValue({
 				fieldId: app.config.transaction.body.address.processAvs
 			});
-
+			
 			if (!lineItemCount) {
 				alert(app.config.language.noItemsOnTransaction);
 				return false;
@@ -265,8 +264,6 @@ define([
 				fieldId: app.config.transaction.body.ccToken,
 				value: response.token
 			};
-
-			log.debug({title: 'options', details: options});
 	    	
 			/* set the token and response info on the current transaction */
 			// this is addressed
@@ -279,10 +276,8 @@ define([
 				fieldId: app.config.transaction.body.creditCardId,
 				value: response.ccId
 			};
-			log.debug({title: 'options', details: options});
 			recordObject.setValue(options);
 		}
-
     };
 
 	/* Make sure that the response was valid, and handle errors */
@@ -486,7 +481,6 @@ define([
 					fieldId: app.config.transaction.body.creditCardId,
 					value: fieldValue
 				};
-				log.debug({title: 'options', details: options});
 				currentRecord.setValue(options);
 			}
 

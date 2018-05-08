@@ -203,7 +203,6 @@ define([
 
 	/* @todo figure out how to run this code more efficiently, */
 	function afterSubmit(context) {
-        log.debug({title: 'context.type', details: context.type});
 		var typesAllowed = [context.UserEventType.CREATE, context.UserEventType.EDIT];
 
 		if (typesAllowed.indexOf(context.type) == -1) {
@@ -249,7 +248,7 @@ define([
 	function disableField(scriptContext, fieldId) {
 
 		var fieldObject = scriptContext.newRecord.getField({fieldId: fieldId});
-		var transactionId = scriptContext.newRecord.getValue({fieldId: 'custbody_heartl_trx_id'});
+		var transactionId = scriptContext.newRecord.getValue({fieldId: app.config.transaction.body.transactionId});
 		
 		if (transactionId) {
 			fieldObject.isDisabled = true;

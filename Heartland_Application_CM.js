@@ -59,19 +59,19 @@ define([
         },
 
         params: {
-            sandboxProfile: 'custscript_heartl_pmt_profile',
-            productionProfile: 'custscript_heartl_sandbox_pmt_profile',
+            productionProfile: 'custscript_heartl_pmt_profile',
+            sandboxProfile: 'custscript_heartl_sandbox_pmt_profile',
         },
 
         record: {
             connection_settings: {
                 type: 'customrecord_heartl_settings',
                 fields: {
-                    publicKey: { 
+                    publicKey: {
                         fieldId: 'custrecord_heartl_s_public_key',
                         defaultValue: 'pkapi_cert_XXXXXXXXXXXXXXXXXX'
                     },
-                    key: { 
+                    key: {
                         fieldId: 'custrecord_heartl_secret_key',
                         defaultValue: 'skapi_cert_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
                     },
@@ -168,38 +168,38 @@ define([
                         defaultValue: ''
                     },
                     authorization: {
-                        fieldId: 'custrecord_heartl_s_authorization', 
+                        fieldId: 'custrecord_heartl_s_authorization',
                         defaultValue: true
                     },
-                    verify: { 
-                        fieldId: 'custrecord_heartl_s_verify', 
+                    verify: {
+                        fieldId: 'custrecord_heartl_s_verify',
                         defaultValue: true
                     },
-                    charge: { 
-                        fieldId: 'custrecord_heartl_s_charge', 
+                    charge: {
+                        fieldId: 'custrecord_heartl_s_charge',
                         defaultValue: true
                     },
-                    tokenize: { 
-                        fieldId: 'custrecord_heartl_s_tokenize', 
+                    tokenize: {
+                        fieldId: 'custrecord_heartl_s_tokenize',
                         defaultValue: true
                     },
-                    capture: { 
-                        fieldId: 'custrecord_heartl_s_capture', 
+                    capture: {
+                        fieldId: 'custrecord_heartl_s_capture',
                         defaultValue: true
                     },
-                    reverse: { 
-                        fieldId: 'custrecord_heartl_s_reverse', 
+                    reverse: {
+                        fieldId: 'custrecord_heartl_s_reverse',
                         defaultValue: true
                     },
-                    refund: { 
-                        fieldId: 'custrecord_heartl_s_refund', 
+                    refund: {
+                        fieldId: 'custrecord_heartl_s_refund',
                         defaultValue: true
                     },
-                    void: { 
-                        fieldId: 'custrecord_heartl_s_void', 
+                    void: {
+                        fieldId: 'custrecord_heartl_s_void',
                         defaultValue: true
                     },
-                    recurring: { 
+                    recurring: {
                         fieldId: 'custrecord_heartl_s_recurring',
                         defaultValue: true
                     }
@@ -268,8 +268,6 @@ define([
                 doNotStoreCard: 'custbody_heartl_do_not_store_card',
                 ccHolderName: 'custbody_heartl_ccholder_name',
                 cardType: 'custbody_heartl_cardtype',
-                csc: 'custbody_heartl_csc',
-                expiration: 'custbody_heartl_expiration',
                 creditCardNumber: 'custbody_heartl_ccnumber',
 
                 /* API REQUEST DATA: avs */
@@ -292,19 +290,14 @@ define([
                 ccToken: 'custbody_heartl_cc_token',
 
                 /* API RESPONSE DATA: transaction  */
-                gatewayResponse: 'custbody_heart_gtw_resp',
                 cvvResultText: 'custbody_heartl_cvv_result_txt',
-                cvvResultCode: 'custbody_heartl_cvv_result_code',
                 avsResultText: 'custbody_heartl_avs_result_txt',
-                avsResultCode: 'custbody_heartl_avs_result_code',
                 ccAuthCode: 'custbody_heartl_cc_auth',
                 transactionId: 'custbody_heartl_trx_id',
                 referenceNumber: 'custbody_heartl_ref_num',
 
                 /* API REQUEST DATA: payment */
                 paymentOperation: 'custbody_heartl_payment_operation',
-                paymentStatus: 'custbody_heartl_pmt_sts',
-                holdError: 'custbody_heartl_hold_error',
 
                 heartlandTransactionId: 'custbody_heartl_transaction'
             }
@@ -516,7 +509,7 @@ define([
                 throw "Heartland Tokenize API is not enabled";
             }
 
-            const address = new GP.Address();
+            var address = new GP.Address();
 
             var processAvs = transaction.address.processAvs;
             delete transaction.address.processAvs;
@@ -530,25 +523,25 @@ define([
             }
 
             return card.tokenize()
-            .withCurrency(currency)
-            .withAddress(processAvs ? address : false)
-            .withAllowDuplicates(true || settings.allowDuplicates || false)
-            .withRequestMultiUseToken(true)
-            .execute()
-            .then(function (token) {
-                log.debug({title: 'token',
-                    details: token});
+                    .withCurrency(currency)
+                    .withAddress(processAvs ? address : false)
+                    .withAllowDuplicates(true || settings.allowDuplicates || false)
+                    .withRequestMultiUseToken(true)
+                    .execute()
+                    .then(function (token) {
+                        log.debug({title: 'token',
+                            details: token});
 
-                resp = token;
-                transaction.token_raw = token;
-                transaction.token = token.token;
-                Promise.resolve(token);
-                return token;
+                        resp = token;
+                        transaction.token_raw = token;
+                        transaction.token = token.token;
+                        Promise.resolve(token);
+                        return token;
 
-            }).catch(function(e) {
+                    }).catch(function(e) {
 
-                Promise.reject(callbacks.handleError(e));
-            });
+                        Promise.reject(callbacks.handleError(e));
+                    });
         },
 
         /* Charge an authorized transaction with Heartland
@@ -567,11 +560,11 @@ define([
             }
 
             return GP.Transaction.fromId(transaction.transactionId)
-            .capture(transaction.amount)
-            .execute()
-            .then(cb).catch(function(e) {
-                Promise.reject( callbacks.handleError(e));
-            });
+                    .capture(transaction.amount)
+                    .execute()
+                    .then(cb).catch(function(e) {
+                        Promise.reject( callbacks.handleError(e));
+                    });
         },
 
         /* void a transaction with Heartland
@@ -588,16 +581,16 @@ define([
             }
 
             return GP.Transaction.fromId(transaction.transactionId)
-            .void()
-            .execute()
-            .then(function(voidResponse) {
-                resp = voidResponse;
-                Promise.resolve(voidResponse);
-                return voidResponse;
+                    .void()
+                    .execute()
+                    .then(function(voidResponse) {
+                        resp = voidResponse;
+                        Promise.resolve(voidResponse);
+                        return voidResponse;
 
-            }).catch(function(e){
-                Promise.reject( callbacks.handleError(e));
-            });
+                    }).catch(function(e){
+                        Promise.reject( callbacks.handleError(e));
+                    });
         },
 
         /* Reverse a transaction with Heartland
@@ -614,18 +607,18 @@ define([
             }
 
             return GP.Transaction.fromId(transaction.transactionId)
-            .reverse(transaction.amount)
-            .execute()
-            .then(function(reverseResponse) {
-                resp = reverseResponse;
-                Promise.resolve(reverseResponse);
+                    .reverse(transaction.amount)
+                    .execute()
+                    .then(function(reverseResponse) {
+                        resp = reverseResponse;
+                        Promise.resolve(reverseResponse);
 
-                return reverseResponse;
+                        return reverseResponse;
 
-            }).catch(function(e){
+                    }).catch(function(e){
 
-                Promise.reject( callbacks.handleError(e));
-            });
+                        Promise.reject( callbacks.handleError(e));
+                    });
         },
 
         /* Refund an authorized transaction with Heartland
@@ -722,11 +715,15 @@ define([
                 ? user.getPreference({name: config.params.sandboxProfile}) 
                 : user.getPreference({name: config.params.productionProfile});
         }
-   
-        var settingsRecord = record.load({
+
+        var options = {
             type: config.record.connection_settings.type,
             id: profile
-        });
+        };
+
+        log.debug({title: 'options', details: options});
+   
+        var settingsRecord = record.load(options);
 
         var settingsLoaded = {};
 

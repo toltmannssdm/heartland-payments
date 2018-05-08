@@ -142,7 +142,6 @@ define([
             });
 
             var paymentOperationText = appConfig.paymentOperations[paymentOperation];
-            log.debug({title: 'paymentOperationText', details: [paymentOperationText]});
 
             var customer = newRecord.getValue({
                 fieldId: 'entity'
@@ -210,10 +209,6 @@ define([
             newRecord.setValue({
                 fieldId: appConfig.transaction.body.referenceNumber,
                 value: resp.referenceNumber
-            });
-            newRecord.setValue({
-                fieldId: appConfig.transaction.body.gatewayResponse,
-                value: JSON.stringify(resp)
             });
             newRecord.setValue({
                 fieldId: appConfig.transaction.body.avsResultText,
