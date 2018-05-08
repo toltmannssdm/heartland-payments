@@ -56,6 +56,12 @@ define([
 		var token = newRecord.getValue({
 			fieldId: app.config.transaction.body.ccToken
 		});
+		var firstName = newRecord.getValue({
+			fieldId: app.config.transaction.body.address.firstName
+		});
+		var lastName = newRecord.getValue({
+			fieldId: app.config.transaction.body.address.lastName
+		});
 
 		/* copy new cc internalid to the select field - record configuration will 
 			not allow to save a token marked 'do not store' */
@@ -87,7 +93,7 @@ define([
         var card = new GP.CreditCardData();
         card.token = token;
     	card.cvn = '';
-		// card.cardHolderName = cardHolderName;
+		card.cardHolderName = firstName + ' ' + lastName;
 		card.expMonth = '';
         card.expYear = '';
 

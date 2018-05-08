@@ -19,151 +19,151 @@ define([
 
     var settings = app.hlapi.initialize();
 
-    var doTests = false;
-    var testResults = {};
+    // var doTests = false;
+    // var testResults = {};
 
-    function runTests(multiuse) {
+    // function runTests(multiuse) {
 
-        multiusestr = multiuse ? ' - multiuse' : ' - single';
-        establishConnection();
+    //     multiusestr = multiuse ? ' - multiuse' : ' - single';
+    //     establishConnection();
 
-        certs.forEach(function(test, i, a) {
+    //     certs.forEach(function(test, i, a) {
 
-            var response = '';
+    //         var response = '';
 
-            var cardData = typeof test.card == 'number' && testResults[test.card+multiusestr] ? testResults[test.card+multiusestr].card : cards[test.card];
+    //         var cardData = typeof test.card == 'number' && testResults[test.card+multiusestr] ? testResults[test.card+multiusestr].card : cards[test.card];
 
-            if (!cardData) {
-                log.error({title: 'unable to process', details: e});
-                return;
-            }
+    //         if (!cardData) {
+    //             log.error({title: 'unable to process', details: e});
+    //             return;
+    //         }
 
-            var card =  new GP.CreditCardData();
-            card.number = '';
-            card.cvn = '';
-            card.expMonth = '';
-            card.expYear = '';
-            card.cardHolderName = 'Cert #' + test.number;
+    //         var card =  new GP.CreditCardData();
+    //         card.number = '';
+    //         card.cvn = '';
+    //         card.expMonth = '';
+    //         card.expYear = '';
+    //         card.cardHolderName = 'Cert #' + test.number;
 
-            var transaction = {
-                amount: test.amount,
-                currency: 'USD',
-                address: address,
-                number: 'Test Number ' + test.number
-            };
+    //         var transaction = {
+    //             amount: test.amount,
+    //             currency: 'USD',
+    //             address: address,
+    //             number: 'Test Number ' + test.number
+    //         };
 
-            if (test.transactionId) {
+    //         if (test.transactionId) {
 
-                var result = testResults[test.transactionId+multiusestr].response._result;
-                if (result.transactionReference) {
-                    transaction.transactionId = result.transactionReference.transactionId;
-                }
-            }
+    //             var result = testResults[test.transactionId+multiusestr].response._result;
+    //             if (result.transactionReference) {
+    //                 transaction.transactionId = result.transactionReference.transactionId;
+    //             }
+    //         }
 
-            /* refer to the previously tokenized card details */
-            if (typeof test.card == 'number') {
-                var result = testResults[test.card+multiusestr].response._result;
-                card.token = result.token;
-            } 
+    //         /* refer to the previously tokenized card details */
+    //         if (typeof test.card == 'number') {
+    //             var result = testResults[test.card+multiusestr].response._result;
+    //             card.token = result.token;
+    //         } 
 
-            try {
-                log.audit({title: 'test', details: test});
+    //         try {
+    //             log.audit({title: 'test', details: test});
 
-                switch(test.transaction) {
+    //             switch(test.transaction) {
 
-                    case 'tokenize':
+    //                 case 'tokenize':
 
-                        card.number = cardData.number;
-                        card.expMonth = cards.expMonth;
-                        card.expYear = cards.expYear;
-                        card.cvn = cardData.csc;
-                        card.cardHolderName = 'Cert #' + test.number;
+    //                     card.number = cardData.number;
+    //                     card.expMonth = cards.expMonth;
+    //                     card.expYear = cards.expYear;
+    //                     card.cvn = cardData.csc;
+    //                     card.cardHolderName = 'Cert #' + test.number;
 
-                        var address = new GP.Address();
-                        if (test.zipcode) {
-                            address.postalCode = test.zipcode;
-                            address.processAvs = true;
-                        }
-                        if (test.street1) {
-                            address.streetAddress1 = test.street1;
-                            address.processAvs = true;
-                        }
-                        transaction.address = address;
+    //                     var address = new GP.Address();
+    //                     if (test.zipcode) {
+    //                         address.postalCode = test.zipcode;
+    //                         address.processAvs = true;
+    //                     }
+    //                     if (test.street1) {
+    //                         address.streetAddress1 = test.street1;
+    //                         address.processAvs = true;
+    //                     }
+    //                     transaction.address = address;
 
-                        response = app.hlapi.tokenize(card, transaction, response);
-                        break;
+    //                     response = app.hlapi.tokenize(card, transaction, response);
+    //                     break;
                     
 
-                    case 'authorize':
+    //                 case 'authorize':
 
-                        cb = function(authresponse) {
+    //                     cb = function(authresponse) {
                             
-                            Promise.resolve(authresponse);
+    //                         Promise.resolve(authresponse);
                             
-                            if (test.capture) {
-                                captureresponse = app.hlapi.capture(authresponse, transaction, response);
-                                Promise.resolve(captureresponse);
-                                return captureresponse;
-                            };
-                            return authresponse;
-                        }
+    //                         if (test.capture) {
+    //                             captureresponse = app.hlapi.capture(authresponse, transaction, response);
+    //                             Promise.resolve(captureresponse);
+    //                             return captureresponse;
+    //                         };
+    //                         return authresponse;
+    //                     }
 
-                        response = app.hlapi.authorize(card, transaction, cb);
-                        break;
+    //                     response = app.hlapi.authorize(card, transaction, cb);
+    //                     break;
                     
-                    case 'charge':
+    //                 case 'charge':
 
-                        // cert testing does not require this to be tokenized, so we have to use the card number
-                        if (test.card == 'jcb') {
-                            card.number = cardData.number;
-                            card.expMonth = cards.expMonth;
-                            card.expYear = cards.expYear;
-                            card.cvn = cardData.csc;
-                        } else {
-                            card.token = result.token;
-                        }
+    //                     // cert testing does not require this to be tokenized, so we have to use the card number
+    //                     if (test.card == 'jcb') {
+    //                         card.number = cardData.number;
+    //                         card.expMonth = cards.expMonth;
+    //                         card.expYear = cards.expYear;
+    //                         card.cvn = cardData.csc;
+    //                     } else {
+    //                         card.token = result.token;
+    //                     }
 
-                        response = app.hlapi.charge(card, transaction, response);
-                        break;
+    //                     response = app.hlapi.charge(card, transaction, response);
+    //                     break;
                     
-                    case 'reverse':
-                        response = app.hlapi.reverse(card, transaction, response);
-                        break;
+    //                 case 'reverse':
+    //                     response = app.hlapi.reverse(card, transaction, response);
+    //                     break;
                     
-                    case 'refund':
-                        response = app.hlapi.refund(transaction, response);
-                        break;
+    //                 case 'refund':
+    //                     response = app.hlapi.refund(transaction, response);
+    //                     break;
                     
-                }
+    //             }
 
-                testResults[test.number+multiusestr] = {
-                    card: card,
-                    cert: test,
-                    response: response
-                };
+    //             testResults[test.number+multiusestr] = {
+    //                 card: card,
+    //                 cert: test,
+    //                 response: response
+    //             };
 
-            } catch(err) {
-                testResults[test.number+multiusestr] = {
-                    card: card,
-                    cert: test,
-                    error: JSON.stringify(err)
-                };
+    //         } catch(err) {
+    //             testResults[test.number+multiusestr] = {
+    //                 card: card,
+    //                 cert: test,
+    //                 error: JSON.stringify(err)
+    //             };
 
-                log.error({title: 'testResults', details: testResults});
+    //             log.error({title: 'testResults', details: testResults});
 
-                return;
-            }
+    //             return;
+    //         }
 
-        });
+    //     });
 
-        return testResults;
-    }
+    //     return testResults;
+    // }
 
     function post(requestBody) {
 
-        if (doTests || requestBody === 999) {
-            return runTests(true) && runTests(false);
-        }
+        // if (doTests || requestBody === 999) {
+        //     return runTests(true) && runTests(false);
+        // }
 
         try {
 
